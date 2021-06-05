@@ -679,3 +679,59 @@ Definition queue (il: list Z) (p: val) :=
   end.
 
 Arguments queue il p : simpl never.
+
+Definition queue_init_spec : ident * funspec :=
+  DECLARE _queue_init
+  WITH q : val
+  PRE [tptr (Tstruct _queue noattr)]
+    PROP () PARAMS (q) SEP (data_at_ Ews (Tstruct _queue noattr) q)
+  POST [tvoid]
+    PROP () RETURN () SEP (queue [] q).
+
+Definition queue_is_empty_spec : ident * funspec :=
+  DECLARE _queue_is_empty
+  WITH q : val, il : list Z
+  PRE [tptr (Tstruct _queue noattr)]
+    PROP () PARAMS (q) SEP (queue il q)
+  POST [tint]
+    PROP ()
+    RETURN (Vint (Int.repr (if eq_dec il [] then 1 else 0)))
+    SEP (queue il q).
+
+Definition queue_front_spec : ident * funspec :=
+  DECLARE _queue_front
+  WITH q : val, i : Z, il : list Z
+  PRE [tptr (Tstruct _queue noattr)]
+    PROP () PARAMS (q) SEP (queue (i :: il) q)
+  POST [tint]
+    PROP () RETURN (Vint (Int.repr i)) SEP (queue (i :: il) q).
+
+Definition queue_enqueue_spec : ident * funspec :=
+  DECLARE _queue_enqueue
+  WITH q : val, i : Z, il : list Z, gv : globals
+  PRE [ tptr (Tstruct _queue noattr), tint ]
+    PROP (Int.min_signed <= i <= Int.max_signed)
+    PARAMS (q; Vint (Int.repr i)) GLOBALS (gv)
+    SEP (queue il q; mem_mgr gv)
+  POST [tvoid]
+    PROP () RETURN () SEP (queue (il ++ [i]) q; mem_mgr gv).
+
+Definition queue_dequeue_spec : ident * funspec :=
+  DECLARE _queue_dequeue
+  WITH q : val, i : Z, il : list Z, gv : globals
+  PRE [ tptr (Tstruct _queue noattr) ]
+    PROP () PARAMS (q) GLOBALS (gv)
+    SEP (queue (i :: il) q; mem_mgr gv)
+  POST [tint]
+    PROP ()
+    RETURN (Vint (Int.repr i))
+    SEP (queue il q; mem_mgr gv).
+
+Definition Gprog : funspecs :=
+  ltac:(with_library prog [
+    queue_init_spec;
+    queue_is_empty_spec;
+    queue_front_spec;
+    queue_enqueue_spec;
+    queue_dequeue_spec
+  ]).
