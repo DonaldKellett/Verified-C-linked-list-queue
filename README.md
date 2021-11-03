@@ -1,3 +1,3 @@
 # Verified-C-linked-list-queue
 
-(A) Codewars Kata idea(s). DO NOT MAKE PUBLIC
+A former Codewars Kata idea in the making, now available under the [MIT License](./LICENSE)
